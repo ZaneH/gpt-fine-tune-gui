@@ -8,6 +8,7 @@ import {
     Table,
     Text,
     Textarea,
+    Tooltip,
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import {
@@ -111,7 +112,7 @@ export const EditorPage = () => {
         });
     }, []);
 
-    const removeExample = useCallback((key) => {
+    const removeSection = useCallback((key) => {
         setStorage((prev) => {
             const newStorage = { ...prev };
 
@@ -264,35 +265,35 @@ export const EditorPage = () => {
                 >
                     {/* Menu buttons */}
                     <Flex w="100%" justify="space-between">
+                        <Button
+                            color="gray"
+                            size="sm"
+                            variant="subtle"
+                            leftSection={<IconFileImport size={"1rem"} />}
+                            onClick={async () => {
+                                const selected = await open({
+                                    title: "Import Fine Tune Data",
+                                });
+
+                                if (selected?.length > 0) {
+                                    fs.readTextFile(selected).then((data) => {
+                                        setStorage(() => {
+                                            const newStorage =
+                                                convertImportToStorage(data);
+
+                                            return newStorage;
+                                        });
+                                    });
+                                }
+                            }}
+                        >
+                            Import
+                        </Button>
                         <Flex gap="md">
                             <Button
-                                color="gray"
-                                leftSection={<IconFileImport size={"1rem"} />}
-                                onClick={async () => {
-                                    const selected = await open({
-                                        title: "Import Fine Tune Data",
-                                    });
-
-                                    if (selected?.length > 0) {
-                                        fs.readTextFile(selected).then(
-                                            (data) => {
-                                                setStorage(() => {
-                                                    const newStorage =
-                                                        convertImportToStorage(
-                                                            data
-                                                        );
-
-                                                    return newStorage;
-                                                });
-                                            }
-                                        );
-                                    }
-                                }}
-                            >
-                                Import
-                            </Button>
-                            <Button
-                                color="gray"
+                                color="blue"
+                                size="sm"
+                                variant="subtle"
                                 leftSection={<IconDeviceFloppy size={"1rem"} />}
                                 onClick={async () => {
                                     save({
@@ -312,18 +313,20 @@ export const EditorPage = () => {
                             >
                                 Export .jsonl
                             </Button>
+                            <Button
+                                color="green"
+                                size="sm"
+                                variant="subtle"
+                                leftSection={<IconCopy size={"1rem"} />}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(
+                                        convertStorageToExport()
+                                    );
+                                }}
+                            >
+                                Copy .jsonl
+                            </Button>
                         </Flex>
-                        <Button
-                            color="green"
-                            leftSection={<IconCopy size={"1rem"} />}
-                            onClick={() => {
-                                navigator.clipboard.writeText(
-                                    convertStorageToExport()
-                                );
-                            }}
-                        >
-                            Copy .jsonl
-                        </Button>
                     </Flex>
                     <Space h="lg" />
                     {/* Data table */}
@@ -408,23 +411,24 @@ export const EditorPage = () => {
                                             }}
                                         >
                                             <Flex justify="end">
-                                                <ActionIcon
-                                                    radius="xl"
-                                                    color="white"
-                                                    gradient={{
-                                                        from: "red",
-                                                        to: "orange",
-                                                    }}
-                                                    variant="gradient"
-                                                    onClick={() => {
-                                                        removeMessage(
-                                                            key,
-                                                            msgIndex
-                                                        );
-                                                    }}
+                                                <Tooltip
+                                                    label="Remove message"
+                                                    position="left"
                                                 >
-                                                    <IconX size="1rem" />
-                                                </ActionIcon>
+                                                    <ActionIcon
+                                                        radius="xl"
+                                                        color="gray"
+                                                        variant="light"
+                                                        onClick={() => {
+                                                            removeMessage(
+                                                                key,
+                                                                msgIndex
+                                                            );
+                                                        }}
+                                                    >
+                                                        <IconX size="1rem" />
+                                                    </ActionIcon>
+                                                </Tooltip>
                                             </Flex>
                                         </td>
                                     </>
@@ -444,20 +448,21 @@ export const EditorPage = () => {
                                             }}
                                         >
                                             <Flex justify="end">
-                                                <ActionIcon
-                                                    radius="xl"
-                                                    color="white"
-                                                    gradient={{
-                                                        from: "red",
-                                                        to: "orange",
-                                                    }}
-                                                    variant="gradient"
-                                                    onClick={() => {
-                                                        removeExample(key);
-                                                    }}
+                                                <Tooltip
+                                                    label="Remove section"
+                                                    position="left"
                                                 >
-                                                    <IconX size="1rem" />
-                                                </ActionIcon>
+                                                    <ActionIcon
+                                                        radius="xl"
+                                                        color="gray"
+                                                        variant="light"
+                                                        onClick={() => {
+                                                            removeSection(key);
+                                                        }}
+                                                    >
+                                                        <IconX size="1rem" />
+                                                    </ActionIcon>
+                                                </Tooltip>
                                             </Flex>
                                         </td>
                                     </>
@@ -474,6 +479,7 @@ export const EditorPage = () => {
                                             <Flex justify="center">
                                                 <Button
                                                     color="blue"
+                                                    radius="xl"
                                                     variant="outline"
                                                     leftSection={
                                                         <IconPlus
@@ -503,6 +509,7 @@ export const EditorPage = () => {
                                                 <Button
                                                     color="blue"
                                                     variant="outline"
+                                                    radius="xl"
                                                     leftSection={
                                                         <IconPlus
                                                             size={"1rem"}
