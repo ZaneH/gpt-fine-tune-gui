@@ -6,23 +6,23 @@ import {
     Select,
     Space,
     Table,
+    Text,
     Textarea,
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import {
     IconCopy,
     IconDeviceFloppy,
-    IconFileExport,
     IconFileImport,
-    IconMessage2Plus,
     IconPlus,
     IconX,
 } from "@tabler/icons-react";
+import { fs } from "@tauri-apps/api";
+import { open, save } from "@tauri-apps/api/dialog";
 import { useCallback } from "preact/compat";
+import { TableVirtuoso } from "react-virtuoso";
 import { v4 as uuidv4 } from "uuid";
 import { Layout } from "../components/layout";
-import { open, save } from "@tauri-apps/api/dialog";
-import { fs } from "@tauri-apps/api";
 
 export const EditorPage = () => {
     const [storage, setStorage] = useLocalStorage({
@@ -65,170 +65,164 @@ export const EditorPage = () => {
         },
     });
 
-    const rows = useCallback(() => {
-        return Object.keys(storage).map((key) => {
+    const updateContent = useCallback(
+        (event, msgIndex, sectionKey) => {
+            setStorage((prev) => {
+                const messages = prev[sectionKey].messages;
+                const prevMessage = messages[msgIndex];
+
+                const newStorage = {
+                    ...prev,
+                    [sectionKey]: {
+                        messages: [
+                            ...messages.slice(0, msgIndex),
+                            {
+                                ...prevMessage,
+                                content: event.target.value,
+                            },
+                            ...messages.slice(msgIndex + 1),
+                        ],
+                    },
+                };
+
+                return newStorage;
+            });
+        },
+        [storage]
+    );
+
+    const updateRole = useCallback(
+        (role, msgIndex, sectionKey) => {
+            setStorage((prev) => {
+                const messages = prev[sectionKey].messages;
+                const prevMessage = messages[msgIndex];
+
+                const newStorage = {
+                    ...prev,
+                    [sectionKey]: {
+                        messages: [
+                            ...messages.slice(0, msgIndex),
+                            {
+                                ...prevMessage,
+                                role,
+                            },
+                            ...messages.slice(msgIndex + 1),
+                        ],
+                    },
+                };
+
+                return newStorage;
+            });
+        },
+        [storage]
+    );
+
+    const removeExample = useCallback(
+        (key) => {
+            setStorage((prev) => {
+                const newStorage = { ...prev };
+
+                delete newStorage[key];
+
+                return newStorage;
+            });
+        },
+        [storage]
+    );
+
+    const removeMessage = useCallback(
+        (key, msgIndex) => {
+            setStorage((prev) => {
+                const messages = prev[key].messages;
+
+                const newStorage = {
+                    ...prev,
+                    [key]: {
+                        messages: [
+                            ...messages.slice(0, msgIndex),
+                            ...messages.slice(msgIndex + 1),
+                        ],
+                    },
+                };
+
+                return newStorage;
+            });
+        },
+        [storage]
+    );
+
+    const addNewMessage = useCallback((sectionKey) => {
+        setStorage((prev) => {
+            const messages = prev[sectionKey].messages;
+
+            const newStorage = {
+                ...prev,
+                [sectionKey]: {
+                    messages: [
+                        ...messages,
+                        {
+                            role: "user",
+                            content: "",
+                        },
+                    ],
+                },
+            };
+
+            return newStorage;
+        });
+    }, []);
+
+    const addNewSection = useCallback(() => {
+        setStorage((prev) => {
+            const newStorage = {
+                ...prev,
+                [`${uuidv4()}`]: {
+                    messages: [
+                        {
+                            role: "system",
+                            content: "",
+                        },
+                    ],
+                },
+            };
+
+            return newStorage;
+        });
+    }, []);
+
+    const generateRows = useCallback(() => {
+        // convert storage to rows
+        const _rows = [];
+        for (const key in storage) {
             const messages = storage[key].messages;
 
-            return messages
-                .map(({ role, content }, index) => {
-                    return (
-                        <Table.Tr>
-                            <Table.Td style={{ verticalAlign: "top" }}>
-                                <Select
-                                    allowDeselect={false}
-                                    placeholder="Role..."
-                                    data={["user", "system", "assistant"]}
-                                    defaultValue={role}
-                                    value={role}
-                                    onChange={(value) => {
-                                        setStorage((prev) => {
-                                            const newStorage = {
-                                                ...prev,
-                                                [key]: {
-                                                    messages: [
-                                                        ...messages.slice(
-                                                            0,
-                                                            index
-                                                        ),
-                                                        {
-                                                            role: value,
-                                                            content,
-                                                        },
-                                                        ...messages.slice(
-                                                            index + 1
-                                                        ),
-                                                    ],
-                                                },
-                                            };
+            _rows.push({
+                type: "section",
+                key,
+            });
 
-                                            return newStorage;
-                                        });
-                                    }}
-                                />
-                            </Table.Td>
-                            <Table.Td>
-                                <Textarea
-                                    autosize
-                                    defaultValue={content}
-                                    onChange={(event) => {
-                                        setStorage((prev) => {
-                                            const newStorage = {
-                                                ...prev,
-                                                [key]: {
-                                                    messages: [
-                                                        ...messages.slice(
-                                                            0,
-                                                            index
-                                                        ),
-                                                        {
-                                                            role,
-                                                            content:
-                                                                event
-                                                                    .currentTarget
-                                                                    .value,
-                                                        },
-                                                        ...messages.slice(
-                                                            index + 1
-                                                        ),
-                                                    ],
-                                                },
-                                            };
+            messages.forEach(({ role, content }, index) => {
+                _rows.push({
+                    key,
+                    role,
+                    content,
+                    index,
+                    type: "message",
+                    msgIndex: index,
+                });
+            });
 
-                                            return newStorage;
-                                        });
-                                    }}
-                                />
-                            </Table.Td>
-                            <Table.Td>
-                                <Flex justify="end">
-                                    <ActionIcon
-                                        color="red"
-                                        variant="subtle"
-                                        onClick={() => {
-                                            setStorage((prev) => {
-                                                const newStorage = {
-                                                    ...prev,
-                                                    [key]: {
-                                                        messages: [
-                                                            ...messages.slice(
-                                                                0,
-                                                                index
-                                                            ),
-                                                            ...messages.slice(
-                                                                index + 1
-                                                            ),
-                                                        ],
-                                                    },
-                                                };
+            _rows.push({
+                type: "add-message",
+                key,
+            });
+        }
 
-                                                return newStorage;
-                                            });
-                                        }}
-                                    >
-                                        <IconX />
-                                    </ActionIcon>
-                                </Flex>
-                            </Table.Td>
-                        </Table.Tr>
-                    );
-                })
-                .concat(
-                    messages.length === 0 ? (
-                        <Table.Tr>
-                            <Table.Td colSpan={3}>
-                                <Button
-                                    variant="subtle"
-                                    color="red"
-                                    fullWidth
-                                    onClick={() => {
-                                        setStorage((prev) => {
-                                            const newStorage = {
-                                                ...prev,
-                                            };
-
-                                            delete newStorage[key];
-
-                                            return newStorage;
-                                        });
-                                    }}
-                                >
-                                    Delete this example
-                                </Button>
-                            </Table.Td>
-                        </Table.Tr>
-                    ) : null,
-                    <Table.Tr>
-                        <Table.Td colSpan={3}>
-                            <Button
-                                variant="subtle"
-                                color="gray"
-                                fullWidth
-                                leftSection={<IconMessage2Plus size={"1rem"} />}
-                                onClick={() => {
-                                    setStorage((prev) => {
-                                        const newStorage = {
-                                            ...prev,
-                                            [key]: {
-                                                messages: [
-                                                    ...messages,
-                                                    {
-                                                        role: "user",
-                                                        content: "",
-                                                    },
-                                                ],
-                                            },
-                                        };
-
-                                        return newStorage;
-                                    });
-                                }}
-                            >
-                                Add new message...
-                            </Button>
-                        </Table.Td>
-                    </Table.Tr>
-                );
+        _rows.push({
+            type: "add-section",
         });
+
+        return _rows;
     }, [storage]);
 
     const convertImportToStorage = useCallback((data) => {
@@ -264,114 +258,282 @@ export const EditorPage = () => {
         return lines.join("\n");
     }, [storage]);
 
+    const rows = generateRows();
+
+    const FullWidthTable = ({ children }) => {
+        return <Table style={{ width: "100%" }}>{children}</Table>;
+    };
+
     return (
         <Layout>
-            <Container>
-                <Flex w="100%" justify="space-between">
-                    <Flex gap="md">
-                        <Button
-                            color="gray"
-                            leftSection={<IconFileImport size={"1rem"} />}
-                            onClick={async () => {
-                                const selected = await open({
-                                    title: "Import Fine Tune Data",
-                                });
-
-                                if (selected?.length > 0) {
-                                    fs.readTextFile(selected).then((data) => {
-                                        setStorage(() => {
-                                            const newStorage =
-                                                convertImportToStorage(data);
-
-                                            return newStorage;
-                                        });
+            <Container h="calc(100dvh - 100px)">
+                <Flex
+                    style={{
+                        flex: "1 1 auto",
+                        flexDirection: "column",
+                        height: "100%",
+                    }}
+                >
+                    {/* Menu buttons */}
+                    <Flex w="100%" justify="space-between">
+                        <Flex gap="md">
+                            <Button
+                                color="gray"
+                                leftSection={<IconFileImport size={"1rem"} />}
+                                onClick={async () => {
+                                    const selected = await open({
+                                        title: "Import Fine Tune Data",
                                     });
-                                }
-                            }}
-                        >
-                            Import
-                        </Button>
-                        <Button
-                            color="gray"
-                            leftSection={<IconDeviceFloppy size={"1rem"} />}
-                            onClick={async () => {
-                                save({
-                                    title: "Export Fine Tune Data",
-                                    defaultPath: "fine-tune-data.jsonl",
-                                }).then((selected) => {
+
                                     if (selected?.length > 0) {
-                                        fs.writeFile(
-                                            selected,
-                                            convertStorageToExport()
-                                        ).then(() => {
-                                            console.log("File saved");
-                                        });
+                                        fs.readTextFile(selected).then(
+                                            (data) => {
+                                                setStorage(() => {
+                                                    const newStorage =
+                                                        convertImportToStorage(
+                                                            data
+                                                        );
+
+                                                    return newStorage;
+                                                });
+                                            }
+                                        );
                                     }
-                                });
+                                }}
+                            >
+                                Import
+                            </Button>
+                            <Button
+                                color="gray"
+                                leftSection={<IconDeviceFloppy size={"1rem"} />}
+                                onClick={async () => {
+                                    save({
+                                        title: "Export Fine Tune Data",
+                                        defaultPath: "fine-tune-data.jsonl",
+                                    }).then((selected) => {
+                                        if (selected?.length > 0) {
+                                            fs.writeFile(
+                                                selected,
+                                                convertStorageToExport()
+                                            ).then(() => {
+                                                console.log("File saved");
+                                            });
+                                        }
+                                    });
+                                }}
+                            >
+                                Export .jsonl
+                            </Button>
+                        </Flex>
+                        <Button
+                            color="green"
+                            leftSection={<IconCopy size={"1rem"} />}
+                            onClick={() => {
+                                navigator.clipboard.writeText(
+                                    convertStorageToExport()
+                                );
                             }}
                         >
-                            Export .jsonl
+                            Copy .jsonl
                         </Button>
                     </Flex>
-                    <Button
-                        color="green"
-                        leftSection={<IconCopy size={"1rem"} />}
-                        onClick={() => {
-                            navigator.clipboard.writeText(
-                                convertStorageToExport()
-                            );
+                    <Space h="lg" />
+                    {/* Data table */}
+                    <TableVirtuoso
+                        data={rows}
+                        components={{
+                            Table: FullWidthTable,
+                            TableRow: Table.Tr,
+                            TableBody: Table.Tbody,
+                            TableHead: Table.Thead,
                         }}
-                    >
-                        Copy .jsonl
-                    </Button>
-                </Flex>
-                <Space h="lg" />
-                <Table>
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Role</Table.Th>
-                            <Table.Th>Message</Table.Th>
-                            <Table.Th></Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <colgroup>
-                        <col span="1" style="width: 20%;" />
-                        <col span="1" style="width: 75%;" />
-                        <col span="1" style="width: 5%;" />
-                    </colgroup>
-                    <Table.Tbody>
-                        {rows()}
-                        <Table.Tr>
-                            <Table.Td colSpan={3}>
-                                <Button
-                                    variant="subtle"
-                                    color="gray"
-                                    fullWidth
-                                    leftSection={<IconPlus size={"1rem"} />}
-                                    onClick={() => {
-                                        setStorage((prev) => {
-                                            const newStorage = {
-                                                ...prev,
-                                                [`${uuidv4()}`]: {
-                                                    messages: [
-                                                        {
-                                                            role: "user",
-                                                            content: "",
-                                                        },
-                                                    ],
-                                                },
-                                            };
-
-                                            return newStorage;
-                                        });
+                        totalCount={rows.length}
+                        fixedHeaderContent={() => (
+                            <Table.Tr>
+                                <Table.Th
+                                    bg="dark"
+                                    style={{
+                                        width: 150,
                                     }}
                                 >
-                                    Add new example...
-                                </Button>
-                            </Table.Td>
-                        </Table.Tr>
-                    </Table.Tbody>
-                </Table>
+                                    Role
+                                </Table.Th>
+                                <Table.Th bg="dark">Content</Table.Th>
+                                <Table.Th bg="dark"></Table.Th>
+                            </Table.Tr>
+                        )}
+                        itemContent={(index, row) => {
+                            const { role, content, type, key, msgIndex } =
+                                row || {};
+
+                            if (type === "message") {
+                                return (
+                                    <>
+                                        <td
+                                            style={{
+                                                width: 150,
+                                                verticalAlign: "top",
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Select
+                                                allowDeselect={false}
+                                                placeholder="Role..."
+                                                data={[
+                                                    "user",
+                                                    "system",
+                                                    "assistant",
+                                                ]}
+                                                defaultValue={role}
+                                                value={role}
+                                                onChange={(value) => {
+                                                    updateRole(
+                                                        value,
+                                                        msgIndex,
+                                                        key
+                                                    );
+                                                }}
+                                            />
+                                        </td>
+                                        <td
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Textarea
+                                                key={key}
+                                                autosize
+                                                defaultValue={content}
+                                                onBlur={(event) => {
+                                                    updateContent(
+                                                        event,
+                                                        msgIndex,
+                                                        key
+                                                    );
+                                                }}
+                                            />
+                                        </td>
+                                        <td
+                                            style={{
+                                                verticalAlign: "top",
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="end">
+                                                <ActionIcon
+                                                    radius="xl"
+                                                    color="white"
+                                                    gradient={{
+                                                        from: "red",
+                                                        to: "orange",
+                                                    }}
+                                                    variant="gradient"
+                                                    onClick={() => {
+                                                        removeMessage(
+                                                            key,
+                                                            msgIndex
+                                                        );
+                                                    }}
+                                                >
+                                                    <IconX size="1rem" />
+                                                </ActionIcon>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            } else if (type === "section") {
+                                return (
+                                    <>
+                                        <td colSpan={2}>
+                                            <Text size="sm" c="dark">
+                                                {key}
+                                            </Text>
+                                        </td>
+                                        <td
+                                            colSpan={1}
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="end">
+                                                <ActionIcon
+                                                    radius="xl"
+                                                    color="white"
+                                                    gradient={{
+                                                        from: "red",
+                                                        to: "orange",
+                                                    }}
+                                                    variant="gradient"
+                                                    onClick={() => {
+                                                        removeExample(key);
+                                                    }}
+                                                >
+                                                    <IconX size="1rem" />
+                                                </ActionIcon>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            } else if (type === "add-message") {
+                                return (
+                                    <>
+                                        <td
+                                            colSpan={3}
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="center">
+                                                <Button
+                                                    color="blue"
+                                                    variant="outline"
+                                                    leftSection={
+                                                        <IconPlus
+                                                            size={"1rem"}
+                                                        />
+                                                    }
+                                                    onClick={() => {
+                                                        addNewMessage(key);
+                                                    }}
+                                                >
+                                                    Add Message
+                                                </Button>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            } else if (type === "add-section") {
+                                return (
+                                    <>
+                                        <td
+                                            colSpan={3}
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="center">
+                                                <Button
+                                                    color="blue"
+                                                    variant="outline"
+                                                    leftSection={
+                                                        <IconPlus
+                                                            size={"1rem"}
+                                                        />
+                                                    }
+                                                    onClick={() => {
+                                                        addNewSection();
+                                                    }}
+                                                >
+                                                    Add Section
+                                                </Button>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            }
+                        }}
+                    />
+                </Flex>
             </Container>
         </Layout>
     );
