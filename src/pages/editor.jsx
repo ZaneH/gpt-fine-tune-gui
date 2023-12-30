@@ -28,7 +28,7 @@ export const EditorPage = () => {
     const [storage, setStorage] = useLocalStorage({
         key: "working_data",
         defaultValue: {
-            "uuid-4121": {
+            "uuid-4141": {
                 messages: [
                     {
                         role: "system",
@@ -45,7 +45,7 @@ export const EditorPage = () => {
                     },
                 ],
             },
-            "uuid-4122": {
+            "uuid-4142": {
                 messages: [
                     {
                         role: "system",

@@ -1,12 +1,8 @@
 # GPT Fine-Tune GUI
 
 OpenAI has a unique format for fine-tuning. This tool aims to help create these .jsonl files.
-It's a **work in progress**, but the core idea is there.
 
-<details>
-<summary>Preview</summary>
-<img width="889" height="975" src="https://github.com/ZaneH/gpt-fine-tune-gui/assets/8400251/80485ea9-a311-44f5-9e20-87e93c5e50fd" />
-</details>
+[[Screenshot](https://github.com/ZaneH/gpt-fine-tune-gui/assets/8400251/80485ea9-a311-44f5-9e20-87e93c5e50fd)]
 
 ## Quickstart
 
@@ -23,7 +19,7 @@ Using the development version is slow. For a faster experience, build the app:
 
 ```bash
 $ npm run tauri build
-$ open ./src-tauri/target/release/bundle/macos
+$ open ./src-tauri/target/release/bundle
 ```
 
 ## Example Export
