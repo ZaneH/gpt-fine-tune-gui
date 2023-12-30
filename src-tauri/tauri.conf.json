@@ -6,8 +6,8 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "gpt-fine-tune-gui",
-    "version": "0.0.0"
+    "productName": "GPT Fine-Tune GUI",
+    "version": "0.0.1"
   },
   "tauri": {
     "allowlist": {
@@ -57,7 +57,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "gpt-fine-tune-gui",
+        "title": "GPT Fine-Tune GUI",
         "width": 800,
         "height": 600
       }
