@@ -2,6 +2,7 @@ import {
     ActionIcon,
     Box,
     Button,
+    ButtonGroup,
     Container,
     Flex,
     Select,
@@ -12,6 +13,8 @@ import {
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import {
+    IconArrowUp,
+    IconArrowUpCircle,
     IconCopy,
     IconDeviceFloppy,
     IconFileExport,
@@ -148,19 +151,19 @@ export const EditorPage = () => {
                     },
                 };
 
-                console.log(newStorage);
-
                 return newStorage;
             });
         },
         [storage]
     );
 
-    const addNewMessage = useCallback((key) => {
+    const addNewMessage = useCallback((sectionKey) => {
         setStorage((prev) => {
+            const messages = prev[sectionKey].messages;
+
             const newStorage = {
                 ...prev,
-                [key]: {
+                [sectionKey]: {
                     messages: [
                         ...messages,
                         {
@@ -175,7 +178,7 @@ export const EditorPage = () => {
         });
     }, []);
 
-    const addNewExample = useCallback(() => {
+    const addNewSection = useCallback(() => {
         setStorage((prev) => {
             const newStorage = {
                 ...prev,
@@ -192,87 +195,6 @@ export const EditorPage = () => {
             return newStorage;
         });
     }, []);
-
-    // const generateRows = useCallback(() => {
-    //     return Object.keys(storage).map((key) => {
-    //         const messages = storage[key].messages;
-
-    //         return messages
-    //             .map(({ role, content }, index) => {
-    //                 return (
-    //                     <Table.Tr>
-    //                         <Table.Td style={{ verticalAlign: "top" }}>
-    //                             <Select
-    //                                 allowDeselect={false}
-    //                                 placeholder="Role..."
-    //                                 data={["user", "system", "assistant"]}
-    //                                 defaultValue={role}
-    //                                 value={role}
-    //                                 onChange={(value) => {
-    //                                     updateRole(value, messages, index);
-    //                                 }}
-    //                             />
-    //                         </Table.Td>
-    //                         <Table.Td>
-    //                             <Textarea
-    //                                 autosize
-    //                                 defaultValue={content}
-    //                                 onChange={(event) => {
-    //                                     updateContent(event, messages, index);
-    //                                 }}
-    //                             />
-    //                         </Table.Td>
-    //                         <Table.Td>
-    //                             <Flex justify="end">
-    //                                 <ActionIcon
-    //                                     color="red"
-    //                                     variant="subtle"
-    //                                     onClick={() => {
-    //                                         removeMessage(key);
-    //                                     }}
-    //                                 >
-    //                                     <IconX />
-    //                                 </ActionIcon>
-    //                             </Flex>
-    //                         </Table.Td>
-    //                     </Table.Tr>
-    //                 );
-    //             })
-    //             .concat(
-    //                 messages.length === 0 ? (
-    //                     <Table.Tr>
-    //                         <Table.Td colSpan={3}>
-    //                             <Button
-    //                                 variant="subtle"
-    //                                 color="red"
-    //                                 fullWidth
-    //                                 onClick={() => {
-    //                                     removeExample(key);
-    //                                 }}
-    //                             >
-    //                                 Delete this example
-    //                             </Button>
-    //                         </Table.Td>
-    //                     </Table.Tr>
-    //                 ) : null,
-    //                 <Table.Tr>
-    //                     <Table.Td colSpan={3}>
-    //                         <Button
-    //                             variant="subtle"
-    //                             color="gray"
-    //                             fullWidth
-    //                             leftSection={<IconMessage2Plus size={"1rem"} />}
-    //                             onClick={() => {
-    //                                 addNewMessage(key);
-    //                             }}
-    //                         >
-    //                             Add new message...
-    //                         </Button>
-    //                     </Table.Td>
-    //                 </Table.Tr>
-    //             );
-    //     });
-    // }, [storage]);
 
     const generateRows = useCallback(() => {
         // convert storage to rows
@@ -295,7 +217,16 @@ export const EditorPage = () => {
                     msgIndex: index,
                 });
             });
+
+            _rows.push({
+                type: "add-message",
+                key,
+            });
         }
+
+        _rows.push({
+            type: "add-section",
+        });
 
         return _rows;
     }, [storage]);
@@ -342,6 +273,7 @@ export const EditorPage = () => {
     return (
         <Layout>
             <Container>
+                {/* Menu buttons */}
                 <Flex w="100%" justify="space-between">
                     <Flex gap="md">
                         <Button
@@ -401,6 +333,7 @@ export const EditorPage = () => {
                     </Button>
                 </Flex>
                 <Space h="lg" />
+                {/* Data table */}
                 <TableVirtuoso
                     data={rows}
                     style={{ height: "75vh" }}
@@ -537,41 +470,61 @@ export const EditorPage = () => {
                                     </td>
                                 </>
                             );
+                        } else if (type === "add-message") {
+                            return (
+                                <>
+                                    <td
+                                        colSpan={3}
+                                        style={{
+                                            padding: "12px 4px",
+                                        }}
+                                    >
+                                        <Flex justify="center">
+                                            <Button
+                                                color="blue"
+                                                variant="outline"
+                                                leftSection={
+                                                    <IconPlus size={"1rem"} />
+                                                }
+                                                onClick={() => {
+                                                    addNewMessage(key);
+                                                }}
+                                            >
+                                                Add Message
+                                            </Button>
+                                        </Flex>
+                                    </td>
+                                </>
+                            );
+                        } else if (type === "add-section") {
+                            return (
+                                <>
+                                    <td
+                                        colSpan={3}
+                                        style={{
+                                            padding: "12px 4px",
+                                        }}
+                                    >
+                                        <Flex justify="center">
+                                            <Button
+                                                color="blue"
+                                                variant="outline"
+                                                leftSection={
+                                                    <IconPlus size={"1rem"} />
+                                                }
+                                                onClick={() => {
+                                                    addNewSection();
+                                                }}
+                                            >
+                                                Add Section
+                                            </Button>
+                                        </Flex>
+                                    </td>
+                                </>
+                            );
                         }
                     }}
                 />
-                {/* <Table>
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Role</Table.Th>
-                            <Table.Th>Message</Table.Th>
-                            <Table.Th></Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <colgroup>
-                        <col span="1" style="width: 20%;" />
-                        <col span="1" style="width: 75%;" />
-                        <col span="1" style="width: 5%;" />
-                    </colgroup>
-                    <Table.Tbody>
-                        {rows()}
-                        <Table.Tr>
-                            <Table.Td colSpan={3}>
-                                <Button
-                                    variant="subtle"
-                                    color="gray"
-                                    fullWidth
-                                    leftSection={<IconPlus size={"1rem"} />}
-                                    onClick={() => {
-                                        addNewExample();
-                                    }}
-                                >
-                                    Add new example...
-                                </Button>
-                            </Table.Td>
-                        </Table.Tr>
-                    </Table.Tbody>
-                </Table> */}
             </Container>
         </Layout>
     );
