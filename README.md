@@ -1,3 +1,5 @@
+<img src="https://i.imgur.com/tAFteOn.png" align="right" height="128px" width="128px">
+
 # GPT Fine-Tune GUI
 
 OpenAI has a unique format for fine-tuning. This tool aims to help create these .jsonl files.
