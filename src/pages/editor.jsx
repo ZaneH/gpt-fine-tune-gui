@@ -68,71 +68,93 @@ export const EditorPage = () => {
         },
     });
 
-    const updateContent = useCallback((event, messages, index) => {
-        setStorage((prev) => {
-            const newStorage = {
-                ...prev,
-                [key]: {
-                    messages: [
-                        ...messages.slice(0, index),
-                        {
-                            role,
-                            content: event.currentTarget.value,
-                        },
-                        ...messages.slice(index + 1),
-                    ],
-                },
-            };
+    const updateContent = useCallback(
+        (event, msgIndex, sectionKey) => {
+            setStorage((prev) => {
+                const messages = prev[sectionKey].messages;
+                const prevMessage = messages[msgIndex];
 
-            return newStorage;
-        });
-    }, []);
+                const newStorage = {
+                    ...prev,
+                    [sectionKey]: {
+                        messages: [
+                            ...messages.slice(0, msgIndex),
+                            {
+                                ...prevMessage,
+                                content: event.target.value,
+                            },
+                            ...messages.slice(msgIndex + 1),
+                        ],
+                    },
+                };
 
-    const updateRole = useCallback((role, messages, index) => {
-        setStorage((prev) => {
-            const newStorage = {
-                ...prev,
-                [key]: {
-                    messages: [
-                        ...messages.slice(0, index),
-                        {
-                            role,
-                            content,
-                        },
-                        ...messages.slice(index + 1),
-                    ],
-                },
-            };
+                return newStorage;
+            });
+        },
+        [storage]
+    );
 
-            return newStorage;
-        });
-    }, []);
+    const updateRole = useCallback(
+        (role, msgIndex, sectionKey) => {
+            setStorage((prev) => {
+                const messages = prev[sectionKey].messages;
+                const prevMessage = messages[msgIndex];
 
-    const removeExample = useCallback((key) => {
-        setStorage((prev) => {
-            const newStorage = { ...prev };
+                const newStorage = {
+                    ...prev,
+                    [sectionKey]: {
+                        messages: [
+                            ...messages.slice(0, msgIndex),
+                            {
+                                ...prevMessage,
+                                role,
+                            },
+                            ...messages.slice(msgIndex + 1),
+                        ],
+                    },
+                };
 
-            delete newStorage[key];
+                return newStorage;
+            });
+        },
+        [storage]
+    );
 
-            return newStorage;
-        });
-    }, []);
+    const removeExample = useCallback(
+        (key) => {
+            setStorage((prev) => {
+                const newStorage = { ...prev };
 
-    const removeMessage = useCallback((key) => {
-        setStorage((prev) => {
-            const newStorage = {
-                ...prev,
-                [key]: {
-                    messages: [
-                        ...messages.slice(0, index),
-                        ...messages.slice(index + 1),
-                    ],
-                },
-            };
+                delete newStorage[key];
 
-            return newStorage;
-        });
-    }, []);
+                return newStorage;
+            });
+        },
+        [storage]
+    );
+
+    const removeMessage = useCallback(
+        (key, msgIndex) => {
+            setStorage((prev) => {
+                const messages = prev[key].messages;
+
+                const newStorage = {
+                    ...prev,
+                    [key]: {
+                        messages: [
+                            ...messages.slice(0, msgIndex),
+                            ...messages.slice(msgIndex + 1),
+                        ],
+                    },
+                };
+
+                console.log(newStorage);
+
+                return newStorage;
+            });
+        },
+        [storage]
+    );
 
     const addNewMessage = useCallback((key) => {
         setStorage((prev) => {
@@ -270,6 +292,7 @@ export const EditorPage = () => {
                     content,
                     index,
                     type: "message",
+                    msgIndex: index,
                 });
             });
         }
@@ -388,7 +411,7 @@ export const EditorPage = () => {
                         TableHead: Table.Thead,
                     }}
                     totalCount={rows.length}
-                    fixedHeaderContent={(index, user) => (
+                    fixedHeaderContent={() => (
                         <Table.Tr>
                             <Table.Th
                                 bg="dark"
@@ -403,7 +426,8 @@ export const EditorPage = () => {
                         </Table.Tr>
                     )}
                     itemContent={(index, row) => {
-                        const { role, content, type, key } = row || {};
+                        const { role, content, type, key, msgIndex } =
+                            row || {};
 
                         if (type === "message") {
                             return (
@@ -428,8 +452,8 @@ export const EditorPage = () => {
                                             onChange={(value) => {
                                                 updateRole(
                                                     value,
-                                                    messages,
-                                                    index
+                                                    msgIndex,
+                                                    key
                                                 );
                                             }}
                                         />
@@ -445,8 +469,8 @@ export const EditorPage = () => {
                                             onChange={(event) => {
                                                 updateContent(
                                                     event,
-                                                    messages,
-                                                    index
+                                                    msgIndex,
+                                                    key
                                                 );
                                             }}
                                         />
@@ -459,13 +483,21 @@ export const EditorPage = () => {
                                     >
                                         <Flex justify="end">
                                             <ActionIcon
-                                                color="red"
-                                                variant="subtle"
+                                                radius="xl"
+                                                color="white"
+                                                gradient={{
+                                                    from: "red",
+                                                    to: "orange",
+                                                }}
+                                                variant="gradient"
                                                 onClick={() => {
-                                                    removeMessage(key);
+                                                    removeMessage(
+                                                        key,
+                                                        msgIndex
+                                                    );
                                                 }}
                                             >
-                                                <IconX />
+                                                <IconX size="1rem" />
                                             </ActionIcon>
                                         </Flex>
                                     </td>
@@ -487,13 +519,18 @@ export const EditorPage = () => {
                                     >
                                         <Flex justify="end">
                                             <ActionIcon
-                                                color="red"
-                                                variant="subtle"
+                                                radius="xl"
+                                                color="white"
+                                                gradient={{
+                                                    from: "red",
+                                                    to: "orange",
+                                                }}
+                                                variant="gradient"
                                                 onClick={() => {
                                                     removeExample(key);
                                                 }}
                                             >
-                                                <IconX />
+                                                <IconX size="1rem" />
                                             </ActionIcon>
                                         </Flex>
                                     </td>
