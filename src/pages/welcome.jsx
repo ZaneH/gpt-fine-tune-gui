@@ -6,15 +6,15 @@ export const WelcomePage = () => {
     return (
         <Layout hideCloseButton={true}>
             <Container maw="320px" my="xl">
-                <Flex direction="column" gap="lg">
+                <Flex direction="column" gap="md">
                     <Button
+                        size="lg"
                         onClick={() => {
                             route("/editor");
                         }}
                     >
-                        New .jsonl
+                        Open Editor
                     </Button>
-                    <Button variant="light">Open .jsonl</Button>
                 </Flex>
             </Container>
         </Layout>
