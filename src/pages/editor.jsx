@@ -464,9 +464,10 @@ export const EditorPage = () => {
                                         }}
                                     >
                                         <Textarea
+                                            key={key}
                                             autosize
                                             defaultValue={content}
-                                            onChange={(event) => {
+                                            onBlur={(event) => {
                                                 updateContent(
                                                     event,
                                                     msgIndex,
