@@ -21,7 +21,7 @@ import {
 import { useCallback } from "preact/compat";
 import { v4 as uuidv4 } from "uuid";
 import { Layout } from "../components/layout";
-import { open } from "@tauri-apps/api/dialog";
+import { open, save } from "@tauri-apps/api/dialog";
 import { fs } from "@tauri-apps/api";
 
 export const EditorPage = () => {
@@ -294,6 +294,21 @@ export const EditorPage = () => {
                         <Button
                             color="gray"
                             leftSection={<IconDeviceFloppy size={"1rem"} />}
+                            onClick={async () => {
+                                save({
+                                    title: "Export Fine Tune Data",
+                                    defaultPath: "fine-tune-data.jsonl",
+                                }).then((selected) => {
+                                    if (selected?.length > 0) {
+                                        fs.writeFile(
+                                            selected,
+                                            convertStorageToExport()
+                                        ).then(() => {
+                                            console.log("File saved");
+                                        });
+                                    }
+                                });
+                            }}
                         >
                             Export .jsonl
                         </Button>
