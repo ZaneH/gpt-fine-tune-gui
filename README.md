@@ -17,6 +17,15 @@ $ npm install
 $ npm run tauri dev
 ```
 
+## Optimized Build
+
+Using the development version is slow. For a faster experience, build the app:
+
+```bash
+$ npm run tauri build
+$ open ./src-tauri/target/release/bundle/macos
+```
+
 ## Example Export
 
 ```
