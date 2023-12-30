@@ -1,4 +1,4 @@
-import { Box, Button, Center, Container, Flex, Title } from "@mantine/core";
+import { Button, Container, Flex } from "@mantine/core";
 import { route } from "preact-router";
 import { Layout } from "../components/layout";
 
@@ -12,9 +12,9 @@ export const WelcomePage = () => {
                             route("/editor");
                         }}
                     >
-                        New Collection
+                        New .jsonl
                     </Button>
-                    <Button variant="light">Open Collection</Button>
+                    <Button variant="light">Open .jsonl</Button>
                 </Flex>
             </Container>
         </Layout>

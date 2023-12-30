@@ -1,8 +1,6 @@
 import {
     ActionIcon,
-    Box,
     Button,
-    ButtonGroup,
     Container,
     Flex,
     Select,
@@ -13,22 +11,18 @@ import {
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import {
-    IconArrowUp,
-    IconArrowUpCircle,
     IconCopy,
     IconDeviceFloppy,
-    IconFileExport,
     IconFileImport,
-    IconMessage2Plus,
     IconPlus,
     IconX,
 } from "@tabler/icons-react";
+import { fs } from "@tauri-apps/api";
+import { open, save } from "@tauri-apps/api/dialog";
 import { useCallback } from "preact/compat";
+import { TableVirtuoso } from "react-virtuoso";
 import { v4 as uuidv4 } from "uuid";
 import { Layout } from "../components/layout";
-import { open, save } from "@tauri-apps/api/dialog";
-import { fs } from "@tauri-apps/api";
-import { TableVirtuoso } from "react-virtuoso";
 
 export const EditorPage = () => {
     const [storage, setStorage] = useLocalStorage({
@@ -272,259 +266,274 @@ export const EditorPage = () => {
 
     return (
         <Layout>
-            <Container>
-                {/* Menu buttons */}
-                <Flex w="100%" justify="space-between">
-                    <Flex gap="md">
-                        <Button
-                            color="gray"
-                            leftSection={<IconFileImport size={"1rem"} />}
-                            onClick={async () => {
-                                const selected = await open({
-                                    title: "Import Fine Tune Data",
-                                });
-
-                                if (selected?.length > 0) {
-                                    fs.readTextFile(selected).then((data) => {
-                                        setStorage(() => {
-                                            const newStorage =
-                                                convertImportToStorage(data);
-
-                                            return newStorage;
-                                        });
-                                    });
-                                }
-                            }}
-                        >
-                            Import
-                        </Button>
-                        <Button
-                            color="gray"
-                            leftSection={<IconDeviceFloppy size={"1rem"} />}
-                            onClick={async () => {
-                                save({
-                                    title: "Export Fine Tune Data",
-                                    defaultPath: "fine-tune-data.jsonl",
-                                }).then((selected) => {
-                                    if (selected?.length > 0) {
-                                        fs.writeFile(
-                                            selected,
-                                            convertStorageToExport()
-                                        ).then(() => {
-                                            console.log("File saved");
-                                        });
-                                    }
-                                });
-                            }}
-                        >
-                            Export .jsonl
-                        </Button>
-                    </Flex>
-                    <Button
-                        color="green"
-                        leftSection={<IconCopy size={"1rem"} />}
-                        onClick={() => {
-                            navigator.clipboard.writeText(
-                                convertStorageToExport()
-                            );
-                        }}
-                    >
-                        Copy .jsonl
-                    </Button>
-                </Flex>
-                <Space h="lg" />
-                {/* Data table */}
-                <TableVirtuoso
-                    data={rows}
-                    style={{ height: "75vh" }}
-                    components={{
-                        Table: FullWidthTable,
-                        TableRow: Table.Tr,
-                        TableBody: Table.Tbody,
-                        TableHead: Table.Thead,
+            <Container h="calc(100dvh - 100px)">
+                <Flex
+                    style={{
+                        flex: "1 1 auto",
+                        flexDirection: "column",
+                        height: "100%",
                     }}
-                    totalCount={rows.length}
-                    fixedHeaderContent={() => (
-                        <Table.Tr>
-                            <Table.Th
-                                bg="dark"
-                                style={{
-                                    width: 150,
+                >
+                    {/* Menu buttons */}
+                    <Flex w="100%" justify="space-between">
+                        <Flex gap="md">
+                            <Button
+                                color="gray"
+                                leftSection={<IconFileImport size={"1rem"} />}
+                                onClick={async () => {
+                                    const selected = await open({
+                                        title: "Import Fine Tune Data",
+                                    });
+
+                                    if (selected?.length > 0) {
+                                        fs.readTextFile(selected).then(
+                                            (data) => {
+                                                setStorage(() => {
+                                                    const newStorage =
+                                                        convertImportToStorage(
+                                                            data
+                                                        );
+
+                                                    return newStorage;
+                                                });
+                                            }
+                                        );
+                                    }
                                 }}
                             >
-                                Role
-                            </Table.Th>
-                            <Table.Th bg="dark">Content</Table.Th>
-                            <Table.Th bg="dark"></Table.Th>
-                        </Table.Tr>
-                    )}
-                    itemContent={(index, row) => {
-                        const { role, content, type, key, msgIndex } =
-                            row || {};
+                                Import
+                            </Button>
+                            <Button
+                                color="gray"
+                                leftSection={<IconDeviceFloppy size={"1rem"} />}
+                                onClick={async () => {
+                                    save({
+                                        title: "Export Fine Tune Data",
+                                        defaultPath: "fine-tune-data.jsonl",
+                                    }).then((selected) => {
+                                        if (selected?.length > 0) {
+                                            fs.writeFile(
+                                                selected,
+                                                convertStorageToExport()
+                                            ).then(() => {
+                                                console.log("File saved");
+                                            });
+                                        }
+                                    });
+                                }}
+                            >
+                                Export .jsonl
+                            </Button>
+                        </Flex>
+                        <Button
+                            color="green"
+                            leftSection={<IconCopy size={"1rem"} />}
+                            onClick={() => {
+                                navigator.clipboard.writeText(
+                                    convertStorageToExport()
+                                );
+                            }}
+                        >
+                            Copy .jsonl
+                        </Button>
+                    </Flex>
+                    <Space h="lg" />
+                    {/* Data table */}
+                    <TableVirtuoso
+                        data={rows}
+                        components={{
+                            Table: FullWidthTable,
+                            TableRow: Table.Tr,
+                            TableBody: Table.Tbody,
+                            TableHead: Table.Thead,
+                        }}
+                        totalCount={rows.length}
+                        fixedHeaderContent={() => (
+                            <Table.Tr>
+                                <Table.Th
+                                    bg="dark"
+                                    style={{
+                                        width: 150,
+                                    }}
+                                >
+                                    Role
+                                </Table.Th>
+                                <Table.Th bg="dark">Content</Table.Th>
+                                <Table.Th bg="dark"></Table.Th>
+                            </Table.Tr>
+                        )}
+                        itemContent={(index, row) => {
+                            const { role, content, type, key, msgIndex } =
+                                row || {};
 
-                        if (type === "message") {
-                            return (
-                                <>
-                                    <td
-                                        style={{
-                                            width: 150,
-                                            verticalAlign: "top",
-                                            padding: "12px 4px",
-                                        }}
-                                    >
-                                        <Select
-                                            allowDeselect={false}
-                                            placeholder="Role..."
-                                            data={[
-                                                "user",
-                                                "system",
-                                                "assistant",
-                                            ]}
-                                            defaultValue={role}
-                                            value={role}
-                                            onChange={(value) => {
-                                                updateRole(
-                                                    value,
-                                                    msgIndex,
-                                                    key
-                                                );
+                            if (type === "message") {
+                                return (
+                                    <>
+                                        <td
+                                            style={{
+                                                width: 150,
+                                                verticalAlign: "top",
+                                                padding: "12px 4px",
                                             }}
-                                        />
-                                    </td>
-                                    <td
-                                        style={{
-                                            padding: "12px 4px",
-                                        }}
-                                    >
-                                        <Textarea
-                                            key={key}
-                                            autosize
-                                            defaultValue={content}
-                                            onBlur={(event) => {
-                                                updateContent(
-                                                    event,
-                                                    msgIndex,
-                                                    key
-                                                );
-                                            }}
-                                        />
-                                    </td>
-                                    <td
-                                        style={{
-                                            verticalAlign: "top",
-                                            padding: "12px 4px",
-                                        }}
-                                    >
-                                        <Flex justify="end">
-                                            <ActionIcon
-                                                radius="xl"
-                                                color="white"
-                                                gradient={{
-                                                    from: "red",
-                                                    to: "orange",
-                                                }}
-                                                variant="gradient"
-                                                onClick={() => {
-                                                    removeMessage(
-                                                        key,
-                                                        msgIndex
+                                        >
+                                            <Select
+                                                allowDeselect={false}
+                                                placeholder="Role..."
+                                                data={[
+                                                    "user",
+                                                    "system",
+                                                    "assistant",
+                                                ]}
+                                                defaultValue={role}
+                                                value={role}
+                                                onChange={(value) => {
+                                                    updateRole(
+                                                        value,
+                                                        msgIndex,
+                                                        key
                                                     );
                                                 }}
-                                            >
-                                                <IconX size="1rem" />
-                                            </ActionIcon>
-                                        </Flex>
-                                    </td>
-                                </>
-                            );
-                        } else if (type === "section") {
-                            return (
-                                <>
-                                    <td colSpan={2}>
-                                        <Text size="sm" c="dark">
-                                            {key}
-                                        </Text>
-                                    </td>
-                                    <td
-                                        colSpan={1}
-                                        style={{
-                                            padding: "12px 4px",
-                                        }}
-                                    >
-                                        <Flex justify="end">
-                                            <ActionIcon
-                                                radius="xl"
-                                                color="white"
-                                                gradient={{
-                                                    from: "red",
-                                                    to: "orange",
+                                            />
+                                        </td>
+                                        <td
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Textarea
+                                                key={key}
+                                                autosize
+                                                defaultValue={content}
+                                                onBlur={(event) => {
+                                                    updateContent(
+                                                        event,
+                                                        msgIndex,
+                                                        key
+                                                    );
                                                 }}
-                                                variant="gradient"
-                                                onClick={() => {
-                                                    removeExample(key);
-                                                }}
-                                            >
-                                                <IconX size="1rem" />
-                                            </ActionIcon>
-                                        </Flex>
-                                    </td>
-                                </>
-                            );
-                        } else if (type === "add-message") {
-                            return (
-                                <>
-                                    <td
-                                        colSpan={3}
-                                        style={{
-                                            padding: "12px 4px",
-                                        }}
-                                    >
-                                        <Flex justify="center">
-                                            <Button
-                                                color="blue"
-                                                variant="outline"
-                                                leftSection={
-                                                    <IconPlus size={"1rem"} />
-                                                }
-                                                onClick={() => {
-                                                    addNewMessage(key);
-                                                }}
-                                            >
-                                                Add Message
-                                            </Button>
-                                        </Flex>
-                                    </td>
-                                </>
-                            );
-                        } else if (type === "add-section") {
-                            return (
-                                <>
-                                    <td
-                                        colSpan={3}
-                                        style={{
-                                            padding: "12px 4px",
-                                        }}
-                                    >
-                                        <Flex justify="center">
-                                            <Button
-                                                color="blue"
-                                                variant="outline"
-                                                leftSection={
-                                                    <IconPlus size={"1rem"} />
-                                                }
-                                                onClick={() => {
-                                                    addNewSection();
-                                                }}
-                                            >
-                                                Add Section
-                                            </Button>
-                                        </Flex>
-                                    </td>
-                                </>
-                            );
-                        }
-                    }}
-                />
+                                            />
+                                        </td>
+                                        <td
+                                            style={{
+                                                verticalAlign: "top",
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="end">
+                                                <ActionIcon
+                                                    radius="xl"
+                                                    color="white"
+                                                    gradient={{
+                                                        from: "red",
+                                                        to: "orange",
+                                                    }}
+                                                    variant="gradient"
+                                                    onClick={() => {
+                                                        removeMessage(
+                                                            key,
+                                                            msgIndex
+                                                        );
+                                                    }}
+                                                >
+                                                    <IconX size="1rem" />
+                                                </ActionIcon>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            } else if (type === "section") {
+                                return (
+                                    <>
+                                        <td colSpan={2}>
+                                            <Text size="sm" c="dark">
+                                                {key}
+                                            </Text>
+                                        </td>
+                                        <td
+                                            colSpan={1}
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="end">
+                                                <ActionIcon
+                                                    radius="xl"
+                                                    color="white"
+                                                    gradient={{
+                                                        from: "red",
+                                                        to: "orange",
+                                                    }}
+                                                    variant="gradient"
+                                                    onClick={() => {
+                                                        removeExample(key);
+                                                    }}
+                                                >
+                                                    <IconX size="1rem" />
+                                                </ActionIcon>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            } else if (type === "add-message") {
+                                return (
+                                    <>
+                                        <td
+                                            colSpan={3}
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="center">
+                                                <Button
+                                                    color="blue"
+                                                    variant="outline"
+                                                    leftSection={
+                                                        <IconPlus
+                                                            size={"1rem"}
+                                                        />
+                                                    }
+                                                    onClick={() => {
+                                                        addNewMessage(key);
+                                                    }}
+                                                >
+                                                    Add Message
+                                                </Button>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            } else if (type === "add-section") {
+                                return (
+                                    <>
+                                        <td
+                                            colSpan={3}
+                                            style={{
+                                                padding: "12px 4px",
+                                            }}
+                                        >
+                                            <Flex justify="center">
+                                                <Button
+                                                    color="blue"
+                                                    variant="outline"
+                                                    leftSection={
+                                                        <IconPlus
+                                                            size={"1rem"}
+                                                        />
+                                                    }
+                                                    onClick={() => {
+                                                        addNewSection();
+                                                    }}
+                                                >
+                                                    Add Section
+                                                </Button>
+                                            </Flex>
+                                        </td>
+                                    </>
+                                );
+                            }
+                        }}
+                    />
+                </Flex>
             </Container>
         </Layout>
     );
