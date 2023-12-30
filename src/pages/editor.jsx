@@ -65,91 +65,79 @@ export const EditorPage = () => {
         },
     });
 
-    const updateContent = useCallback(
-        (event, msgIndex, sectionKey) => {
-            setStorage((prev) => {
-                const messages = prev[sectionKey].messages;
-                const prevMessage = messages[msgIndex];
+    const updateContent = useCallback((event, msgIndex, sectionKey) => {
+        setStorage((prev) => {
+            const messages = prev[sectionKey].messages;
+            const prevMessage = messages[msgIndex];
 
-                const newStorage = {
-                    ...prev,
-                    [sectionKey]: {
-                        messages: [
-                            ...messages.slice(0, msgIndex),
-                            {
-                                ...prevMessage,
-                                content: event.target.value,
-                            },
-                            ...messages.slice(msgIndex + 1),
-                        ],
-                    },
-                };
+            const newStorage = {
+                ...prev,
+                [sectionKey]: {
+                    messages: [
+                        ...messages.slice(0, msgIndex),
+                        {
+                            ...prevMessage,
+                            content: event.target.value,
+                        },
+                        ...messages.slice(msgIndex + 1),
+                    ],
+                },
+            };
 
-                return newStorage;
-            });
-        },
-        [storage]
-    );
+            return newStorage;
+        });
+    }, []);
 
-    const updateRole = useCallback(
-        (role, msgIndex, sectionKey) => {
-            setStorage((prev) => {
-                const messages = prev[sectionKey].messages;
-                const prevMessage = messages[msgIndex];
+    const updateRole = useCallback((role, msgIndex, sectionKey) => {
+        setStorage((prev) => {
+            const messages = prev[sectionKey].messages;
+            const prevMessage = messages[msgIndex];
 
-                const newStorage = {
-                    ...prev,
-                    [sectionKey]: {
-                        messages: [
-                            ...messages.slice(0, msgIndex),
-                            {
-                                ...prevMessage,
-                                role,
-                            },
-                            ...messages.slice(msgIndex + 1),
-                        ],
-                    },
-                };
+            const newStorage = {
+                ...prev,
+                [sectionKey]: {
+                    messages: [
+                        ...messages.slice(0, msgIndex),
+                        {
+                            ...prevMessage,
+                            role,
+                        },
+                        ...messages.slice(msgIndex + 1),
+                    ],
+                },
+            };
 
-                return newStorage;
-            });
-        },
-        [storage]
-    );
+            return newStorage;
+        });
+    }, []);
 
-    const removeExample = useCallback(
-        (key) => {
-            setStorage((prev) => {
-                const newStorage = { ...prev };
+    const removeExample = useCallback((key) => {
+        setStorage((prev) => {
+            const newStorage = { ...prev };
 
-                delete newStorage[key];
+            delete newStorage[key];
 
-                return newStorage;
-            });
-        },
-        [storage]
-    );
+            return newStorage;
+        });
+    }, []);
 
-    const removeMessage = useCallback(
-        (key, msgIndex) => {
-            setStorage((prev) => {
-                const messages = prev[key].messages;
+    const removeMessage = useCallback((key, msgIndex) => {
+        setStorage((prev) => {
+            const messages = prev[key].messages;
 
-                const newStorage = {
-                    ...prev,
-                    [key]: {
-                        messages: [
-                            ...messages.slice(0, msgIndex),
-                            ...messages.slice(msgIndex + 1),
-                        ],
-                    },
-                };
+            const newStorage = {
+                ...prev,
+                [key]: {
+                    messages: [
+                        ...messages.slice(0, msgIndex),
+                        ...messages.slice(msgIndex + 1),
+                    ],
+                },
+            };
 
-                return newStorage;
-            });
-        },
-        [storage]
-    );
+            return newStorage;
+        });
+    }, []);
 
     const addNewMessage = useCallback((sectionKey) => {
         setStorage((prev) => {
