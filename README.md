@@ -2,7 +2,7 @@
 
 OpenAI has a unique format for fine-tuning. This tool aims to help create these .jsonl files.
 
-[[Screenshot](https://github.com/ZaneH/gpt-fine-tune-gui/assets/8400251/80485ea9-a311-44f5-9e20-87e93c5e50fd)]
+[[Screenshot](https://github.com/ZaneH/gpt-fine-tune-gui/assets/8400251/925f0238-ca9b-4dde-b7ef-6ec9739e9de0)]
 
 ## Quickstart
 
