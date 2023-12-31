@@ -23,11 +23,11 @@ import { open, save } from "@tauri-apps/api/dialog";
 import { useCallback } from "preact/compat";
 import { TableVirtuoso } from "react-virtuoso";
 import { v4 as uuidv4 } from "uuid";
-import { Layout } from "../components/layout";
+import { Layout } from "../components/Layout";
 
-export const EditorPage = () => {
+export const OpenAIEditorPage = () => {
     const [storage, setStorage] = useLocalStorage({
-        key: "working_data",
+        key: "working_data_openai",
         defaultValue: {
             "uuid-4141": {
                 messages: [
@@ -253,8 +253,18 @@ export const EditorPage = () => {
         return <Table style={{ width: "100%" }}>{children}</Table>;
     };
 
+    const getTextAreaRows = (content) => {
+        const charCount = content.length;
+        if (charCount === 0) {
+            return 1;
+        }
+
+        const rows = Math.ceil(charCount / 50);
+        return Math.min(rows, 8);
+    };
+
     return (
-        <Layout>
+        <Layout header="OpenAI">
             <Container h="calc(100dvh - 100px)">
                 <Flex
                     style={{
@@ -358,6 +368,8 @@ export const EditorPage = () => {
                                 row || {};
 
                             if (type === "message") {
+                                const textareaRows = getTextAreaRows(content);
+
                                 return (
                                     <>
                                         <td
@@ -394,6 +406,7 @@ export const EditorPage = () => {
                                             <Textarea
                                                 key={key}
                                                 autosize
+                                                rows={textareaRows}
                                                 defaultValue={content}
                                                 onBlur={(event) => {
                                                     updateContent(
