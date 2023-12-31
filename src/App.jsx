@@ -1,13 +1,15 @@
 import Router from "preact-router";
 import "./App.css";
-import { EditorPage } from "./pages/editor";
-import { WelcomePage } from "./pages/welcome";
+import { OpenAIEditorPage } from "./pages/OpenAIEditor";
+import { WelcomePage } from "./pages/WelcomePage";
+import { AlpacaEditorPage } from "./pages/AlpacaEditor";
 
 function App() {
     return (
         <Router>
             <WelcomePage path="/" />
-            <EditorPage path="/editor" />
+            <OpenAIEditorPage path="/editor/openai" />
+            <AlpacaEditorPage path="/editor/alpaca" />
         </Router>
     );
 }

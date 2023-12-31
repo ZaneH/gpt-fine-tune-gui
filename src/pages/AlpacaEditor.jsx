@@ -25,41 +25,41 @@ import { TableVirtuoso } from "react-virtuoso";
 import { v4 as uuidv4 } from "uuid";
 import { Layout } from "../components/layout";
 
-export const EditorPage = () => {
+export const AlpacaEditorPage = () => {
     const [storage, setStorage] = useLocalStorage({
-        key: "working_data",
+        key: "working_data_alpaca",
         defaultValue: {
             "uuid-4141": {
                 messages: [
                     {
-                        role: "system",
-                        content: "You are Grok",
+                        role: "instruction",
+                        content: "Give three tips for staying healthy.",
                     },
                     {
-                        role: "user",
-                        content: "Hello",
+                        role: "input",
+                        content: "",
                     },
                     {
-                        role: "assistant",
+                        role: "output",
                         content:
-                            "Hello there! I'm Grok, your personal assistant.",
+                            "1. Eat a balanced and nutritious diet: Make sure your meals are inclusive of a variety of fruits and vegetables, lean protein, whole grains, and healthy fats. This helps to provide your body with the essential nutrients to function at its best and can help prevent chronic diseases.\n\n2. Engage in regular physical activity: Exercise is crucial for maintaining strong bones, muscles, and cardiovascular health. Aim for at least 150 minutes of moderate aerobic exercise or 75 minutes of vigorous exercise each week.\n\n3. Get enough sleep: Getting enough quality sleep is crucial for physical and mental well-being. It helps to regulate mood, improve cognitive function, and supports healthy growth and immune function. Aim for 7-9 hours of sleep each night.",
                     },
                 ],
             },
             "uuid-4142": {
                 messages: [
                     {
-                        role: "system",
-                        content: "You are Grok",
+                        role: "instruction",
+                        content: "What are the three primary colors?",
                     },
                     {
-                        role: "user",
-                        content: "Hello",
+                        role: "input",
+                        content: "",
                     },
                     {
-                        role: "assistant",
+                        role: "output",
                         content:
-                            "Hello there! I'm Grok, your personal assistant.",
+                            "The three primary colors are red, blue, and yellow. These colors are called primary because they cannot be created by mixing other colors and all other colors can be made by combining them in various proportions. In the additive color system, used for light, the primary colors are red, green, and blue (RGB).",
                     },
                 ],
             },
@@ -122,45 +122,6 @@ export const EditorPage = () => {
         });
     }, []);
 
-    const removeMessage = useCallback((key, msgIndex) => {
-        setStorage((prev) => {
-            const messages = prev[key].messages;
-
-            const newStorage = {
-                ...prev,
-                [key]: {
-                    messages: [
-                        ...messages.slice(0, msgIndex),
-                        ...messages.slice(msgIndex + 1),
-                    ],
-                },
-            };
-
-            return newStorage;
-        });
-    }, []);
-
-    const addNewMessage = useCallback((sectionKey) => {
-        setStorage((prev) => {
-            const messages = prev[sectionKey].messages;
-
-            const newStorage = {
-                ...prev,
-                [sectionKey]: {
-                    messages: [
-                        ...messages,
-                        {
-                            role: "user",
-                            content: "",
-                        },
-                    ],
-                },
-            };
-
-            return newStorage;
-        });
-    }, []);
-
     const addNewSection = useCallback(() => {
         setStorage((prev) => {
             const newStorage = {
@@ -168,7 +129,15 @@ export const EditorPage = () => {
                 [`${uuidv4()}`]: {
                     messages: [
                         {
-                            role: "system",
+                            role: "instruction",
+                            content: "",
+                        },
+                        {
+                            role: "input",
+                            content: "",
+                        },
+                        {
+                            role: "output",
                             content: "",
                         },
                     ],
@@ -215,36 +184,45 @@ export const EditorPage = () => {
     }, [storage]);
 
     const convertImportToStorage = useCallback((data) => {
-        const lines = data.split("\n");
+        // expected input format: [{"instruction": "...", "input": "...", "output": "..."}, ...]
+        const _storage = {};
 
-        const newStorage = {};
+        const _data = JSON.parse(data);
 
-        lines.forEach((line) => {
-            try {
-                const uuid = uuidv4();
-                const parsed = JSON.parse(line);
-                const { messages } = parsed;
+        _data.forEach((section) => {
+            const _section = {
+                messages: [],
+            };
 
-                newStorage[uuid] = {
-                    messages,
-                };
-            } catch (e) {
-                // TODO: Handle error
-                console.log(e);
+            for (const key in section) {
+                _section.messages.push({
+                    role: key,
+                    content: section[key],
+                });
             }
+
+            _storage[`${uuidv4()}`] = _section;
         });
 
-        return newStorage;
+        return _storage;
     }, []);
 
     const convertStorageToExport = useCallback(() => {
-        const lines = Object.keys(storage).map((key) => {
-            const { messages } = storage[key];
+        // expected output format: [{"instruction": "...", "input": "...", "output": "..."}, ...]
+        const _export = [];
 
-            return JSON.stringify({ messages });
-        });
+        for (const key in storage) {
+            const messages = storage[key].messages;
+            const _section = {};
 
-        return lines.join("\n");
+            messages.forEach(({ role, content }) => {
+                _section[role] = content;
+            });
+
+            _export.push(_section);
+        }
+
+        return JSON.stringify(_export, null, 2);
     }, [storage]);
 
     const rows = generateRows();
@@ -254,7 +232,7 @@ export const EditorPage = () => {
     };
 
     return (
-        <Layout>
+        <Layout header="Alpaca">
             <Container h="calc(100dvh - 100px)">
                 <Flex
                     style={{
@@ -371,9 +349,9 @@ export const EditorPage = () => {
                                                 allowDeselect={false}
                                                 placeholder="Role..."
                                                 data={[
-                                                    "user",
-                                                    "system",
-                                                    "assistant",
+                                                    "instruction",
+                                                    "input",
+                                                    "output",
                                                 ]}
                                                 defaultValue={role}
                                                 value={role}
@@ -387,6 +365,7 @@ export const EditorPage = () => {
                                             />
                                         </td>
                                         <td
+                                            colSpan={2}
                                             style={{
                                                 padding: "12px 4px",
                                             }}
@@ -403,33 +382,6 @@ export const EditorPage = () => {
                                                     );
                                                 }}
                                             />
-                                        </td>
-                                        <td
-                                            style={{
-                                                verticalAlign: "top",
-                                                padding: "12px 4px",
-                                            }}
-                                        >
-                                            <Flex justify="end">
-                                                <Tooltip
-                                                    label="Remove message"
-                                                    position="left"
-                                                >
-                                                    <ActionIcon
-                                                        radius="xl"
-                                                        color="gray"
-                                                        variant="light"
-                                                        onClick={() => {
-                                                            removeMessage(
-                                                                key,
-                                                                msgIndex
-                                                            );
-                                                        }}
-                                                    >
-                                                        <IconX size="1rem" />
-                                                    </ActionIcon>
-                                                </Tooltip>
-                                            </Flex>
                                         </td>
                                     </>
                                 );
@@ -463,35 +415,6 @@ export const EditorPage = () => {
                                                         <IconX size="1rem" />
                                                     </ActionIcon>
                                                 </Tooltip>
-                                            </Flex>
-                                        </td>
-                                    </>
-                                );
-                            } else if (type === "add-message") {
-                                return (
-                                    <>
-                                        <td
-                                            colSpan={3}
-                                            style={{
-                                                padding: "12px 4px",
-                                            }}
-                                        >
-                                            <Flex justify="center">
-                                                <Button
-                                                    color="blue"
-                                                    radius="xl"
-                                                    variant="outline"
-                                                    leftSection={
-                                                        <IconPlus
-                                                            size={"1rem"}
-                                                        />
-                                                    }
-                                                    onClick={() => {
-                                                        addNewMessage(key);
-                                                    }}
-                                                >
-                                                    Add Message
-                                                </Button>
                                             </Flex>
                                         </td>
                                     </>
