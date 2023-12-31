@@ -253,6 +253,16 @@ export const OpenAIEditorPage = () => {
         return <Table style={{ width: "100%" }}>{children}</Table>;
     };
 
+    const getTextAreaRows = (content) => {
+        const charCount = content.length;
+        if (charCount === 0) {
+            return 1;
+        }
+
+        const rows = Math.ceil(charCount / 50);
+        return Math.min(rows, 8);
+    };
+
     return (
         <Layout header="OpenAI">
             <Container h="calc(100dvh - 100px)">
@@ -358,6 +368,8 @@ export const OpenAIEditorPage = () => {
                                 row || {};
 
                             if (type === "message") {
+                                const textareaRows = getTextAreaRows(content);
+
                                 return (
                                     <>
                                         <td
@@ -394,6 +406,7 @@ export const OpenAIEditorPage = () => {
                                             <Textarea
                                                 key={key}
                                                 autosize
+                                                rows={textareaRows}
                                                 defaultValue={content}
                                                 onBlur={(event) => {
                                                     updateContent(

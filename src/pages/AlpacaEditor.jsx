@@ -164,15 +164,9 @@ export const AlpacaEditorPage = () => {
                     key,
                     role,
                     content,
-                    index,
                     type: "message",
                     msgIndex: index,
                 });
-            });
-
-            _rows.push({
-                type: "add-message",
-                key,
             });
         }
 
@@ -229,6 +223,16 @@ export const AlpacaEditorPage = () => {
         return <Table style={{ width: "100%" }}>{children}</Table>;
     };
 
+    const getTextAreaRows = (content) => {
+        const charCount = content.length;
+        if (charCount === 0) {
+            return 1;
+        }
+
+        const rows = Math.ceil(charCount / 50);
+        return Math.min(rows, 8);
+    };
+
     return (
         <Layout header="Alpaca">
             <Container h="calc(100dvh - 100px)">
@@ -274,7 +278,7 @@ export const AlpacaEditorPage = () => {
                                 onClick={async () => {
                                     save({
                                         title: "Export Fine Tune Data",
-                                        defaultPath: "fine-tune-data.jsonl",
+                                        defaultPath: "fine-tune-data.json",
                                     }).then((selected) => {
                                         if (selected?.length > 0) {
                                             fs.writeFile(
@@ -287,7 +291,7 @@ export const AlpacaEditorPage = () => {
                                     });
                                 }}
                             >
-                                Export .jsonl
+                                Export .json
                             </Button>
                             <Button
                                 color="green"
@@ -300,7 +304,7 @@ export const AlpacaEditorPage = () => {
                                     );
                                 }}
                             >
-                                Copy .jsonl
+                                Copy .json
                             </Button>
                         </Flex>
                     </Flex>
@@ -334,6 +338,8 @@ export const AlpacaEditorPage = () => {
                                 row || {};
 
                             if (type === "message") {
+                                const textareaRows = getTextAreaRows(content);
+
                                 return (
                                     <>
                                         <td
@@ -370,7 +376,7 @@ export const AlpacaEditorPage = () => {
                                         >
                                             <Textarea
                                                 key={key}
-                                                autosize
+                                                rows={textareaRows}
                                                 defaultValue={content}
                                                 onBlur={(event) => {
                                                     updateContent(
