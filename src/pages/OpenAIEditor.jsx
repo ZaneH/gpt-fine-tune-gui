@@ -23,7 +23,7 @@ import { open, save } from "@tauri-apps/api/dialog";
 import { useCallback } from "preact/compat";
 import { TableVirtuoso } from "react-virtuoso";
 import { v4 as uuidv4 } from "uuid";
-import { Layout } from "../components/layout";
+import { Layout } from "../components/Layout";
 
 export const OpenAIEditorPage = () => {
     const [storage, setStorage] = useLocalStorage({

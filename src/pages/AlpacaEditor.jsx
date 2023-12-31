@@ -23,7 +23,7 @@ import { open, save } from "@tauri-apps/api/dialog";
 import { useCallback } from "preact/compat";
 import { TableVirtuoso } from "react-virtuoso";
 import { v4 as uuidv4 } from "uuid";
-import { Layout } from "../components/layout";
+import { Layout } from "../components/Layout";
 
 export const AlpacaEditorPage = () => {
     const [storage, setStorage] = useLocalStorage({
@@ -184,7 +184,6 @@ export const AlpacaEditorPage = () => {
     }, [storage]);
 
     const convertImportToStorage = useCallback((data) => {
-        // expected input format: [{"instruction": "...", "input": "...", "output": "..."}, ...]
         const _storage = {};
 
         const _data = JSON.parse(data);
@@ -208,7 +207,6 @@ export const AlpacaEditorPage = () => {
     }, []);
 
     const convertStorageToExport = useCallback(() => {
-        // expected output format: [{"instruction": "...", "input": "...", "output": "..."}, ...]
         const _export = [];
 
         for (const key in storage) {

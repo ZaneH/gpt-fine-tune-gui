@@ -1,6 +1,6 @@
 import { Button, Container, Flex, Title } from "@mantine/core";
 import { route } from "preact-router";
-import { Layout } from "../components/layout";
+import { Layout } from "../components/Layout";
 
 export const WelcomePage = () => {
     return (
